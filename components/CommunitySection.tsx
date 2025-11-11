@@ -1,7 +1,22 @@
-"use client"
+"use client";
 
-import { motion } from 'framer-motion';
-import { Star, Users, TrendingUp } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Star, Users, TrendingUp } from "lucide-react";
+
+// Deterministic pseudo-random generator
+function pseudoRandom01(seed: number) {
+  const x = Math.sin(seed * 9301 + 49297) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function deterministicPosition(index: number, min = 5, max = 95) {
+  const r1 = pseudoRandom01(index * 1.37 + 1.2);
+  const r2 = pseudoRandom01(index * 2.19 + 3.8);
+  return {
+    left: `${(min + r1 * (max - min)).toFixed(3)}%`,
+    top: `${(min + r2 * (max - min)).toFixed(3)}%`,
+  };
+}
 
 const CommunitySection = () => {
   const avatars = [
@@ -10,7 +25,7 @@ const CommunitySection = () => {
     { initials: "PM", color: "from-pink-500 to-pink-600", name: "Priya M." },
     { initials: "AJ", color: "from-emerald-500 to-emerald-600", name: "Arjun J." },
     { initials: "SK", color: "from-yellow-500 to-yellow-600", name: "Sneha K." },
-    { initials: "VT", color: "from-red-500 to-red-600", name: "Vikram T." }
+    { initials: "VT", color: "from-red-500 to-red-600", name: "Vikram T." },
   ];
 
   const testimonials = [
@@ -18,57 +33,60 @@ const CommunitySection = () => {
       text: "DSAQuest made DSA actually fun! I went from dreading algorithms to looking forward to solving them every day.",
       author: "Ananya",
       role: "Computer Science Student",
-      rating: 5
+      rating: 5,
     },
     {
       text: "The gamification is brilliant. I've learned more in 3 months here than I did in a year of traditional courses.",
       author: "Rahul",
       role: "Software Engineer",
-      rating: 5
+      rating: 5,
     },
     {
       text: "The AI hints are a game-changer. They guide you without spoiling the solution. Perfect for learning!",
       author: "Priya",
       role: "Coding Bootcamp Graduate",
-      rating: 5
-    }
+      rating: 5,
+    },
   ];
 
   const stats = [
     { icon: Users, value: "1,000+", label: "Active Learners" },
     { icon: TrendingUp, value: "50K+", label: "Challenges Solved" },
-    { icon: Star, value: "4.9/5", label: "Average Rating" }
+    { icon: Star, value: "4.9/5", label: "Average Rating" },
   ];
 
   return (
     <section className="py-20 px-4 bg-emerald-50 relative overflow-hidden">
-      {/* Floating Bubbles Background */}
+      {/* Floating Bubbles Background (deterministic) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(8)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-32 h-32 rounded-full bg-emerald-200/20"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`
-            }}
-            animate={{
-              y: [0, -30, 0],
-              x: [0, Math.random() * 20 - 10, 0],
-              scale: [1, 1.1, 1]
-            }}
-            transition={{
-              duration: 4 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-              ease: "easeInOut"
-            }}
-          />
-        ))}
+        {[...Array(8)].map((_, i) => {
+          const pos = deterministicPosition(i + 1);
+          return (
+            <motion.div
+              key={i}
+              className="absolute w-32 h-32 rounded-full bg-emerald-200/20"
+              style={{
+                left: pos.left,
+                top: pos.top,
+                transform: "translate(-50%, -50%)",
+              }}
+              animate={{
+                y: [0, -30, 0],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 5 + (i % 3),
+                repeat: Infinity,
+                delay: i * 0.3,
+                ease: "easeInOut",
+              }}
+            />
+          );
+        })}
       </div>
 
       <div className="max-w-6xl mx-auto relative z-10">
-        {/* Section Header */}
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -118,7 +136,9 @@ const CommunitySection = () => {
                 className="relative -ml-4 first:ml-0"
                 style={{ zIndex: avatars.length - index }}
               >
-                <div className={`w-16 h-16 rounded-full bg-linear-to-br ${avatar.color} flex items-center justify-center text-white font-bold text-lg border-4 border-white shadow-lg cursor-pointer`}>
+                <div
+                  className={`w-16 h-16 rounded-full bg-linear-to-br ${avatar.color} flex items-center justify-center text-white font-bold text-lg border-4 border-white shadow-lg cursor-pointer`}
+                >
                   {avatar.initials}
                 </div>
                 <motion.div
@@ -154,14 +174,8 @@ const CommunitySection = () => {
               className="bg-white rounded-2xl p-6 shadow-xl text-center"
             >
               <motion.div
-                animate={{
-                  rotate: [0, 5, -5, 0]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  delay: index * 0.3
-                }}
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity, delay: index * 0.3 }}
                 className="inline-flex p-4 bg-linear-to-br from-emerald-500 to-emerald-600 rounded-2xl mb-4"
               >
                 <stat.icon className="w-8 h-8 text-white" />
@@ -188,21 +202,18 @@ const CommunitySection = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.2 + index * 0.1 }}
               whileHover={{ y: -8, scale: 1.02 }}
-              className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all"
+              className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all relative"
             >
-              {/* Stars */}
               <div className="flex gap-1 mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
 
-              {/* Quote */}
               <p className="text-gray-700 mb-4 leading-relaxed italic">
                 "{testimonial.text}"
               </p>
 
-              {/* Author */}
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-linear-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold">
                   {testimonial.author[0]}
@@ -213,7 +224,6 @@ const CommunitySection = () => {
                 </div>
               </div>
 
-              {/* Decorative Quote Mark */}
               <div className="text-6xl text-emerald-100 font-serif absolute top-4 right-4 select-none">
                 "
               </div>
