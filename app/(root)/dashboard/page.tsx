@@ -9,6 +9,8 @@ import { BadgesPanel } from "@/components/BadgesPanel";
 import LeaderboardCard from "@/components/LeaderBoard";
 import RecentActivity from "@/components/RecentActivity";
 import { QuickActions } from "@/components/QuickActions";
+import { useRouter } from "next/navigation";
+
 
 import { mockDashboardData } from "@/components/mockDashboardData";
 
@@ -26,26 +28,46 @@ interface NormalizedChallenge {
   xp: number;
 }
 
-/** Normalizes any incoming difficulty string into the strict union. */
-const normalizeDifficulty = (d: unknown): Difficulty => {
-  if (typeof d !== "string") return "Easy";
-  const s = d.trim().toLowerCase();
-  if (s === "easy") return "Easy";
-  if (s === "medium") return "Medium";
-  if (s === "hard") return "Hard";
-  // fallback — choose whichever default you prefer
-  return "Easy";
-};
 
 export default function DashboardPage() {
-  const data = mockDashboardData ?? {};
+  const [profile, setProfile] = React.useState<any>(null);
+  const [leaderboard, setLeaderboard] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-  const userName = "Explorer"; // Replace with Clerk/currentUser.name in production
+  React.useEffect(() => {
+    async function fetchData() {
+      try {
+        const [profileRes, leaderboardRes] = await Promise.all([
+          fetch("/api/user/profile"),
+          fetch("/api/leaderboard")
+        ]);
+        const profileData = await profileRes.json();
+        const leaderboardData = await leaderboardRes.json();
+
+        setProfile(profileData);
+        setLeaderboard(leaderboardData.leaderboard || []);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading dashboard...</div>;
+
+  const router = useRouter();
+  const data = profile || {};
+  const userName = profile?.name || "Explorer";
+
 
   // Handlers
   const handleOpenChallenge = (id: string) => {
-    console.log("Opening challenge:", id);
-    // router.push(`/challenges/${id}`);
+    const rec = data.recommendations?.find((r: any) => r.id === id);
+    if (rec) {
+      router.push(`/challenges/${rec.topicId}/modules/${rec.id}`);
+    }
   };
 
   const handleClaimReward = async () => {
@@ -53,8 +75,29 @@ export default function DashboardPage() {
     await new Promise((r) => setTimeout(r, 800));
   };
 
-  const handleStartDaily = () => console.log("Start Daily Challenge");
-  const handleResume = () => console.log("Resume Last Attempt");
+  const handleStartDaily = () => {
+    if (data.dailyChallenge) {
+      router.push(`/challenges/${data.dailyChallenge.topicId}/modules/${data.dailyChallenge.id}`);
+    } else {
+      router.push('/challenges');
+    }
+  };
+  const handleResume = () => {
+    if (data.recentActivities && data.recentActivities.length > 0) {
+      // Find the first activity that leads to a module
+      const lastModuleAct = data.recentActivities[0];
+      // Since our API currently doesn't return topicId in activities, we fallback to daily challenge or dashboard
+      if (data.dailyChallenge) {
+        router.push(`/challenges/${data.dailyChallenge.topicId}/modules/${data.dailyChallenge.id}`);
+      } else {
+        router.push('/challenges');
+      }
+    } else {
+      router.push('/challenges');
+    }
+  };
+
+
 
   // Normalize challenges to satisfy the strict difficulty union type
   const normalizedChallenges: NormalizedChallenge[] = (data.challengesPreview || []).map(
@@ -90,8 +133,9 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <XPBar xp={Number(data.xp ?? 0)} nextLevelXp={Number(data.nextLevelXp ?? 1000)} />
+            <XPBar xp={Number(data.xp ?? 0)} nextLevelXp={data.level * 1000} />
           </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -100,25 +144,38 @@ export default function DashboardPage() {
             <LevelCard
               level={Number(data.level ?? 1)}
               xp={Number(data.xp ?? 0)}
-              nextLevelXp={Number(data.nextLevelXp ?? 1000)}
+              nextLevelXp={data.level * 1000}
               streak={Number(data.streak ?? 0)}
               onClaimReward={handleClaimReward}
             />
+
           </motion.div>
         </section>
 
         {/* Featured Challenges */}
         <section className="bg-white rounded-xl shadow-md p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-800">Featured Challenges</h2>
-            <button className="text-emerald-600 hover:text-emerald-700 font-medium text-sm">
-              View All →
+            <h2 className="text-xl font-bold text-gray-800">Recommended for You</h2>
+            <button
+              onClick={() => router.push('/challenges')}
+              className="text-emerald-600 hover:text-emerald-700 font-medium text-sm"
+            >
+              View Topics →
             </button>
           </div>
 
-          {/* Pass normalizedChallenges — guaranteed to match the strict union type */}
-          <ChallengesGrid challenges={normalizedChallenges} onOpenChallenge={handleOpenChallenge} />
+          <ChallengesGrid
+            challenges={(data.recommendations || []).map((r: any) => ({
+              id: r.id,
+              title: r.title,
+              type: r.topicTitle,
+              difficulty: "Easy",
+              xp: r.xp
+            }))}
+            onOpenChallenge={handleOpenChallenge}
+          />
         </section>
+
 
         {/* Badges & Quick Actions */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -129,9 +186,11 @@ export default function DashboardPage() {
         {/* Leaderboard & Activity */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <RecentActivity activities={data.recentActivity || []} />
+            <RecentActivity activities={data.recentActivities || []} />
           </div>
-          <LeaderboardCard leaderboard={data.leaderboardTop || []} currentUserId="current" />
+
+          <LeaderboardCard leaderboard={leaderboard} currentUserId={profile?.userId} />
+
         </section>
       </main>
     </div>

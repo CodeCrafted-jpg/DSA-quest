@@ -18,6 +18,8 @@ import {
   Lock,
   Search as SearchIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+
 
 
 interface RawTopic {
@@ -100,16 +102,16 @@ function InlineProgress({ progress, textColor }: { progress: number; textColor: 
   const pct = Math.max(0, Math.min(100, Math.round(progress)));
   return (
     <div className="mt-3">
-      <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
-        <div
-          style={{ width: `${pct}%` }}
-          className="h-3 rounded-full transition-all duration-500"
-          aria-hidden
-        />
-      </div>
-      <div className={`text-xs font-medium mt-2 ${textColor} flex justify-between`}>
+      <div className="flex justify-between items-center mb-1 text-xs font-bold uppercase tracking-wider opacity-80">
+        <span>Completion</span>
         <span>{pct}%</span>
-        <span>{pct === 100 ? "Mastered" : pct > 0 ? "In progress" : "Not started"}</span>
+      </div>
+      <div className="w-full bg-black/10 rounded-full h-2.5 overflow-hidden border border-white/10">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          className="h-full bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+        />
       </div>
     </div>
   );
@@ -117,11 +119,15 @@ function InlineProgress({ progress, textColor }: { progress: number; textColor: 
 
 /* ----------------------------- Page ------------------------------------ */
 export default function ChallengesPage() {
+  const router = useRouter();
   const [rawTopics, setRawTopics] = useState<RawTopic[] | null>(null);
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [userXP] = useState(1250); // demo user XP; replace with real user state if available
+  const [userXP, setUserXP] = useState(0);
+  const [userLevel, setUserLevel] = useState(1);
+
 
   useEffect(() => {
     let mounted = true;
@@ -137,16 +143,16 @@ export default function ChallengesPage() {
         const arr: RawTopic[] = Array.isArray(json)
           ? json
           : json.topics
-          ? json.topics
-          : json.data
-          ? json.data
-          : // maybe the route returned { success: true, payload: [...] }
-            Array.isArray(json.payload)
-          ? json.payload
-          : // fallback: if it's a single object, make it an array
-            json && typeof json === "object" && json._id
-          ? [json]
-          : [];
+            ? json.topics
+            : json.data
+              ? json.data
+              : // maybe the route returned { success: true, payload: [...] }
+              Array.isArray(json.payload)
+                ? json.payload
+                : // fallback: if it's a single object, make it an array
+                json && typeof json === "object" && json._id
+                  ? [json]
+                  : [];
         if (mounted) setRawTopics(arr);
       } catch (err: any) {
         console.error("Failed to fetch /api/topics:", err);
@@ -155,10 +161,21 @@ export default function ChallengesPage() {
         if (mounted) setLoading(false);
       }
     }
+    async function fetchUserData() {
+      try {
+        const res = await fetch("/api/user/profile");
+        const data = await res.json();
+        if (mounted) {
+          setUserXP(data.xp || 0);
+          setUserLevel(data.level || 1);
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile stats:", err);
+      }
+    }
     fetchTopics();
-    return () => {
-      mounted = false;
-    };
+    fetchUserData();
+
   }, []);
 
   // Format DB topics to our UI model
@@ -169,7 +186,8 @@ export default function ChallengesPage() {
       const title = String(t.title ?? "Untitled");
       const description = String(t.description ?? "No description provided");
       const color = t.color ?? "#10B981"; // fallback to mint green hex
-      const progress = typeof t.progress === "number" ? t.progress : t.totalXp ? Math.round(Math.min(100, (t.totalXp / 5))) : 0;
+      const progress = typeof t.progress === "number" ? t.progress : 0;
+
       const requiredLevel = typeof t.unlockRequirement === "number" ? t.unlockRequirement : 0;
       const unlocked = (requiredLevel || 0) <= (userXP || 0);
 
@@ -314,12 +332,12 @@ export default function ChallengesPage() {
                   className={`relative rounded-2xl p-6 shadow-lg overflow-hidden cursor-pointer ${topic.unlocked ? "" : "opacity-80"}`}
                   onClick={() => {
                     if (topic.unlocked) {
-                      // replace with router push if you want real navigation
-                      console.log(`Open /challenges/${topic.id}`);
+                      router.push(`/challenges/${topic.id}`);
                     } else {
                       console.log(`Locked: requires level ${topic.requiredLevel}`);
                     }
                   }}
+
                   // background via class or style
                   style={
                     useHex

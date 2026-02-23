@@ -13,7 +13,9 @@ export default function Navbar() {
     { name: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={18} /> },
     { name: "Play DSA", href: "/challenges", icon: <Brain size={18} /> },
     { name: "Leaderboard", href: "/leaderboard", icon: <Trophy size={18} /> },
+    { name: "Profile", href: "/profile", icon: <LogIn size={18} /> },
   ];
+
 
   return (
     <nav className="sticky top-0 z-50 bg-emerald-50 shadow-md border-b border-emerald-200">
@@ -36,11 +38,10 @@ export default function Navbar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-1 font-medium transition-all duration-200 ${
-                pathname === item.href
+              className={`flex items-center gap-1 font-medium transition-all duration-200 ${pathname === item.href
                   ? "text-emerald-600 border-b-2 border-emerald-500"
                   : "text-gray-700 hover:text-emerald-600"
-              }`}
+                }`}
             >
               {item.icon}
               {item.name}
