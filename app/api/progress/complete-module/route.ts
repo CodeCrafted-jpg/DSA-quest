@@ -84,7 +84,8 @@ export async function POST(req: Request) {
 
         // Topic Master Badge
         if (topicProgress.progress === 100) {
-            const masterBadge = { name: `${topic.title} Master`, icon: "🏆", description: `Mastered all modules in ${topic.title}!` };
+            const masterBadge = { name: `${topic.title} Master`, icon: "🏆", description: `You've conquered every module in the ${topic.title} topic! Your dedication is legendary.` };
+
             // Check if already has this badge
             if (!user.badges.some((b: any) => b.name === masterBadge.name)) {
                 user.badges.push(masterBadge);

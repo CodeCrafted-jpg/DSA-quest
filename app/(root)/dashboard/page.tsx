@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { XPBar } from "@/components/Xbar";
 import { LevelCard } from "@/components/LevelCard";
 import { ChallengesGrid } from "@/components/ChallengesGrid";
-import { BadgesPanel } from "@/components/BadgesPanel";
+import BadgesPanel from "@/components/BadgesPanel";
 import LeaderboardCard from "@/components/LeaderBoard";
 import RecentActivity from "@/components/RecentActivity";
 import { QuickActions } from "@/components/QuickActions";
@@ -196,3 +196,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+function normalizeDifficulty(difficulty: any) {
+  throw new Error("Function not implemented.");
+}
+
