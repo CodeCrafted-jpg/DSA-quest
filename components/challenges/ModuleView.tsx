@@ -3,9 +3,10 @@
 
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import AISensei from "../AISensei";
 import QuizCard from "./QuizCard";
 import { ArrowLeft, BookOpen, GraduationCap } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ModuleViewProps {
     module: {
@@ -22,7 +23,8 @@ export default function ModuleView({ module, onComplete, onBack }: ModuleViewPro
     const [mode, setMode] = useState<"learning" | "quiz">("learning");
 
     return (
-        <div className="max-w-4xl mx-auto py-12 px-4">
+        <div className="max-w-4xl mx-auto py-12 px-4 relative">
+            <AISensei />
             <button
                 onClick={onBack}
                 className="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors mb-8 font-medium"
@@ -92,7 +94,4 @@ export default function ModuleView({ module, onComplete, onBack }: ModuleViewPro
     );
 }
 
-// Minimal AnimatePresence mock if not used properly
-function AnimatePresence({ children, mode }: { children: React.ReactNode, mode?: string }) {
-    return <>{children}</>;
-}
+
