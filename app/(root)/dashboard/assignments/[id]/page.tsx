@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
-export default function AttemptAssignmentPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function AttemptAssignmentPage() {
+  const params = useParams();
+  const id = params?.id as string;
   const [assignment, setAssignment] = useState<any>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
