@@ -168,11 +168,19 @@ export default function TeacherDashboard() {
             },
             {
               title: "Avg Completion Rate",
-              val: `${overallAvgProgress}%`,
+              val: `${metrics.overallAvgProgress ?? overallAvgProgress}%`,
               sub: "Across all learning topics",
               icon: <TrendingUp className="w-6 h-6 text-blue-600" />,
               bg: "bg-blue-50",
               border: "border-blue-100",
+            },
+            {
+              title: "Pass Rate",
+              val: `${metrics.passRate ?? 0}%`,
+              sub: "Students meeting progress target",
+              icon: <ArrowUpRight className="w-6 h-6 text-emerald-600" />,
+              bg: "bg-emerald-50",
+              border: "border-emerald-100",
             },
             {
               title: "Struggling Flags",
@@ -215,8 +223,10 @@ export default function TeacherDashboard() {
                   <h2 className="text-xl font-bold text-gray-800">Topic Metrics</h2>
                   <p className="text-xs text-gray-500">Breakdown of performance in each module</p>
                 </div>
-                <div className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
-                  Updated Live
+                <div className="flex items-center gap-3">
+                  <div className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">Updated Live</div>
+                  <div className="text-xs font-medium text-gray-600">Overall Avg: <span className="font-bold">{metrics.overallAvgProgress ?? overallAvgProgress}%</span></div>
+                  <div className="text-xs font-medium text-gray-600">Pass Rate: <span className="font-bold">{metrics.passRate ?? 0}%</span></div>
                 </div>
               </div>
 
@@ -349,6 +359,77 @@ export default function TeacherDashboard() {
                     </div>
                     <div className="text-right shrink-0">
                       <span className="text-sm font-extrabold text-rose-600">{t.avgProgress}% avg</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+
+            {/* Problem Hotspots */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-white rounded-3xl p-6 shadow-xl shadow-emerald-500/5 border border-emerald-50"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <AlertTriangle className="w-5 h-5 text-rose-500" />
+                <h3 className="font-bold text-gray-800">Problem Hotspots</h3>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">Top questions with the highest wrong-rate</p>
+
+              <div className="mb-3 flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    // CSV export
+                    const hotspots = metrics.problemHotspots || [];
+                    const header = ["questionId", "text", "incorrect", "attempts", "wrongRate"];
+                    const rows = hotspots.map((h: any) => [h.questionId, `"${(h.text || "").replace(/"/g, '""')}"`, h.incorrect, h.attempts, h.wrongRate]);
+                    const csv = [header.join(','), ...rows.map((r: any) => r.join(','))].join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'problem_hotspots.csv';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="px-3 py-1 rounded bg-emerald-50 text-emerald-700 text-sm font-semibold border border-emerald-100"
+                >
+                  Export CSV
+                </button>
+                <button
+                  onClick={async () => {
+                    // Message top hotspot students (demo: call backend)
+                    if (!metrics.problemHotspots || metrics.problemHotspots.length === 0) return;
+                    const top = metrics.problemHotspots[0];
+                    const res = await fetch('/api/dashboard/message-hotspot', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questionId: top.questionId }) });
+                    const data = await res.json();
+                    alert(`Messaged ${data.messaged || 0} students about hotspot.`);
+                  }}
+                  className="px-3 py-1 rounded bg-rose-50 text-rose-700 text-sm font-semibold border border-rose-100"
+                >
+                  Message Top Hotspot
+                </button>
+              </div>
+
+              <ul className="space-y-3">
+                {(metrics.problemHotspots || []).map((h: any) => (
+                  <li key={h.questionId} className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100 flex items-start justify-between gap-4">
+                    <div className="truncate">
+                      <p className="text-sm font-bold text-gray-800 truncate">{h.text}</p>
+                      <p className="text-xs text-gray-500">Wrong rate: <span className="font-semibold text-rose-600">{h.wrongRate}%</span> — {h.incorrect}/{h.attempts} incorrect</p>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={async () => {
+                          const res = await fetch('/api/dashboard/message-hotspot', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ questionId: h.questionId }) });
+                          const data = await res.json();
+                          alert(`Messaged ${data.messaged || 0} students about this question.`);
+                        }}
+                        className="px-3 py-2 rounded bg-emerald-600 text-white text-sm font-bold"
+                      >
+                        Message Students
+                      </button>
                     </div>
                   </li>
                 ))}

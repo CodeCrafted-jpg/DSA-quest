@@ -16,6 +16,7 @@ export default function Navbar() {
     { name: "Play DSA", href: "/challenges", icon: <Brain size={18} /> },
     { name: "Leaderboard", href: "/leaderboard", icon: <Trophy size={18} /> },
     { name: "Teacher", href: "/dashboard/teacher", icon: <LayoutDashboard size={18} /> },
+    { name: "Assignments", href: "/dashboard/assignments", icon: <LayoutDashboard size={18} /> },
     { name: "Profile", href: "/profile", icon: <LogIn size={18} /> },
   ];
 
