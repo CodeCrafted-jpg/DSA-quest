@@ -58,7 +58,7 @@ export default function ProfilePage() {
                                 )}
                             </div>
                             <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
-                                Lvl {profile?.level}
+                                Lvl {profile?.level ?? 0}
                             </div>
                         </div>
 
@@ -69,11 +69,11 @@ export default function ProfilePage() {
                             <div className="flex flex-wrap justify-center md:justify-start gap-4">
                                 <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-2xl text-emerald-700 font-bold">
                                     <Zap className="w-5 h-5 fill-emerald-500" />
-                                    {profile?.streak} Day Streak
+                                    {profile?.streak ?? 0} Day Streak
                                 </div>
                                 <div className="flex items-center gap-2 bg-amber-50 px-4 py-2 rounded-2xl text-amber-700 font-bold">
                                     <Star className="w-5 h-5 fill-amber-500" />
-                                    {profile?.xp} Current XP
+                                    {profile?.xp ?? 0} Current XP
                                 </div>
                             </div>
                         </div>
@@ -93,7 +93,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <p className="text-gray-500 font-medium">All-time XP</p>
-                            <p className="text-3xl font-black text-gray-900">{profile?.allTimeXp.toLocaleString()}</p>
+                            <p className="text-3xl font-black text-gray-900">{Number(profile?.allTimeXp ?? 0).toLocaleString()}</p>
                         </div>
                     </motion.div>
 
@@ -108,7 +108,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <p className="text-gray-500 font-medium">Earned This Week</p>
-                            <p className="text-3xl font-black text-gray-900">+{profile?.weeklyXp.toLocaleString()}</p>
+                            <p className="text-3xl font-black text-gray-900">+{Number(profile?.weeklyXp ?? 0).toLocaleString()}</p>
                         </div>
                     </motion.div>
                 </div>
@@ -121,8 +121,8 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <h3 className="text-2xl font-bold mb-2">Weekly Goal</h3>
-                            <p className="opacity-90 max-w-lg mb-6 text-lg">
-                                You've earned <span className="font-bold underline">{profile?.weeklyXp} XP</span> out of your 500 XP weekly goal. Keep practicing to stay in the top 10%!
+                                <p className="opacity-90 max-w-lg mb-6 text-lg">
+                                You've earned <span className="font-bold underline">{profile?.weeklyXp ?? 0} XP</span> out of your 500 XP weekly goal. Keep practicing to stay in the top 10%!
                             </p>
 
                             <div className="w-full bg-black/10 rounded-full h-4 overflow-hidden mb-2">

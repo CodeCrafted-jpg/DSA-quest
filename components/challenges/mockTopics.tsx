@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Layers, Type, Link2, LayoutList, ArrowDownUp, GitBranch, Repeat, Zap, Hash, TrendingUp, Award } from "lucide-react";
 import { Topic } from "./types"; // optional if separated
 
-const iconMap: Record<string, JSX.Element> = {
+const iconMap: Record<string, React.ReactNode> = {
   "Arrays": <Layers className="w-8 h-8" />,
   "Strings": <Type className="w-8 h-8" />,
   "Linked Lists": <Link2 className="w-8 h-8" />,

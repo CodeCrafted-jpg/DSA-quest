@@ -98,12 +98,28 @@ export async function POST(req: Request) {
 
         await user.save();
 
+        // Fetch updated top leaderboard snapshot to return to client
+        const topUsers = await UserProgress.find()
+            .sort({ xp: -1 })
+            .limit(10)
+            .select("userId name xp level")
+            .lean();
+
+        const leaderboard = topUsers.map((u: any, i: number) => ({
+            id: u._id.toString(),
+            userId: u.userId,
+            name: u.name || `Explorer #${i + 1}`,
+            score: u.xp || 0,
+            level: u.level || 1,
+        }));
+
         return NextResponse.json({
             success: true,
             progress: topicProgress.progress,
             xp: user.xp,
             level: user.level,
-            newBadges: badgeUpdates
+            newBadges: badgeUpdates,
+            leaderboard,
         });
     } catch (error) {
         console.error("❌ Error completing module:", error);

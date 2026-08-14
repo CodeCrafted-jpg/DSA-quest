@@ -15,7 +15,7 @@ export async function GET() {
     const { userId } = await auth();
 
     // 3️⃣ Fetch all topics
-    const topics = await Topic.find().lean();
+    const topics = (await Topic.find().lean()) as any[];
 
     // 4️⃣ Default fallback for guests
     let progressMap: Record<string, number> = {};
@@ -23,7 +23,7 @@ export async function GET() {
 
     // 5️⃣ If user is logged in, get their progress
     if (userId) {
-      const user = await UserProgress.findOne({ userId }).lean();
+      const user = (await UserProgress.findOne({ userId }).lean()) as any;
 
       if (user) {
         userXp = user.xp || 0;

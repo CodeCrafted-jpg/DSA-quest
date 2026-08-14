@@ -34,6 +34,8 @@ export default function DashboardPage() {
   const [leaderboard, setLeaderboard] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
 
+  const router = useRouter();
+
   React.useEffect(() => {
     async function fetchData() {
       try {
@@ -56,8 +58,6 @@ export default function DashboardPage() {
   }, []);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading dashboard...</div>;
-
-  const router = useRouter();
   const data = profile || {};
   const userName = profile?.name || "Explorer";
 
@@ -111,8 +111,8 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-linear-to-br from-emerald-50 to-gray-100 text-gray-800">
-      <main className="flex-1 container mx-auto px-4 md:px-8 py-8 space-y-8">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-50 to-white text-gray-800">
+      <main className="flex-1 max-w-6xl mx-auto px-4 md:px-8 py-10 space-y-6">
         {/* Welcome Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -120,14 +120,20 @@ export default function DashboardPage() {
           transition={{ duration: 0.4 }}
           className="mb-8"
         >
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">
-            Welcome back, {userName}! 👋
-          </h1>
-          <p className="text-gray-600">Ready to level up your skills today?</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">Welcome back, {userName} 👋</h1>
+              <p className="text-gray-600">Quick start: resume a module, take a daily challenge, or view the teacher dashboard.</p>
+            </div>
+            <div className="space-x-3">
+              <button onClick={handleStartDaily} className="px-4 py-2 bg-emerald-600 text-white rounded-lg shadow">Daily</button>
+              <button onClick={handleResume} className="px-4 py-2 bg-white border rounded-lg">Resume</button>
+            </div>
+          </div>
         </motion.div>
 
         {/* XP Bar & Level Section */}
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -153,7 +159,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Featured Challenges */}
-        <section className="bg-white rounded-xl shadow-md p-6">
+        <section className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-800">Recommended for You</h2>
             <button
@@ -197,6 +203,10 @@ export default function DashboardPage() {
   );
 }
 function normalizeDifficulty(difficulty: any) {
-  throw new Error("Function not implemented.");
+  if (!difficulty) return "Medium";
+  const d = String(difficulty).toLowerCase();
+  if (d.includes("easy")) return "Easy";
+  if (d.includes("hard")) return "Hard";
+  return "Medium";
 }
 

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed:topics": "ts-node --project tsconfig.scripts.json --transpile-only scripts/seedTopics.ts"
+    "seed:topics": "ts-node --project tsconfig.scripts.json --transpile-only scripts/seedTopics.ts",
+    "seed:demo": "ts-node --project tsconfig.scripts.json --transpile-only scripts/seedDemoUser.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.34.1",

@@ -1,6 +1,33 @@
 // models/Topic.ts
 import mongoose, { Schema, model, models } from "mongoose";
 
+export interface IMCQuestion {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation?: string;
+}
+
+export interface IModule {
+  _id: mongoose.Types.ObjectId;
+  title: string;
+  description?: string;
+  content: string;
+  questions: IMCQuestion[];
+}
+
+export interface ITopic {
+  _id: mongoose.Types.ObjectId;
+  title: string;
+  description?: string;
+  color?: string;
+  totalXp: number;
+  unlockRequirement: number;
+  modules: IModule[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 const MCQSchema = new Schema({
   question: { type: String, required: true },
   options: [{ type: String, required: true }],
@@ -15,7 +42,7 @@ const ModuleSchema = new Schema({
   questions: [MCQSchema],
 });
 
-const TopicSchema = new Schema(
+const TopicSchema = new Schema<ITopic>(
   {
     title: { type: String, required: true },
     description: String,
@@ -27,5 +54,5 @@ const TopicSchema = new Schema(
   { timestamps: true }
 );
 
-export const Topic = models.Topic || model("Topic", TopicSchema);
+export const Topic = (models.Topic || model<ITopic>("Topic", TopicSchema)) as mongoose.Model<ITopic>;
 

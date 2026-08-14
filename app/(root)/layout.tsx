@@ -1,18 +1,11 @@
-import Footer from '@/components/Footer2'
-import Navbar from '@/components/Navbar'
 import React from 'react'
 
-const layout =  async ({ children }: { children : React.ReactNode }) =>  {
+const layout = async ({ children }: { children: React.ReactNode }) => {
   return (
-        <main >
-          
-    <Navbar />
-            <div>
-                {children}
-            </div>
-            <Footer />
-        </main>
-  )
-}
+    <div className="w-full flex-1">
+      {children}
+    </div>
+  );
+};
 
-export default layout
+export default layout;

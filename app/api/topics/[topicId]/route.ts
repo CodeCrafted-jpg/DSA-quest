@@ -7,14 +7,14 @@ import { NextResponse } from "next/server";
 
 export async function GET(
     req: Request,
-    { params }: { params: { topicId: string } }
+    { params }: { params: Promise<{ topicId: string }> }
 ) {
     try {
         const { topicId } = await params;
         await connectDB();
         const { userId } = await auth();
 
-        const topic = await Topic.findById(topicId).lean();
+        const topic = (await Topic.findById(topicId).lean()) as any;
 
         if (!topic) {
             return NextResponse.json({ error: "Topic not found" }, { status: 404 });
@@ -22,7 +22,7 @@ export async function GET(
 
         let completedModules: string[] = [];
         if (userId) {
-            const user = await UserProgress.findOne({ userId }).lean();
+            const user = (await UserProgress.findOne({ userId }).lean()) as any;
             if (user && user.topicProgress) {
                 const progress = user.topicProgress.find(
                     (p: any) => p.topicId.toString() === topicId

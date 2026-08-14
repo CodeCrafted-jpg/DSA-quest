@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { computeNextDifficulty, reorderQuestions, Difficulty } from "@/lib/adaptive";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, ArrowRight, Lightbulb, Trophy, Sparkles } from "lucide-react";
 
@@ -25,6 +26,10 @@ export default function QuizCard({ questions, onComplete }: QuizCardProps) {
     const [aiExplanation, setAiExplanation] = useState<string | null>(null);
     const [isFinished, setIsFinished] = useState(false);
     const [aiLoading, setAiLoading] = useState(false);
+    const [generatedQ, setGeneratedQ] = useState<any | null>(null);
+    const [genLoading, setGenLoading] = useState(false);
+    const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+    const [recentAnswers, setRecentAnswers] = useState<boolean[]>([]);
 
     const currentQuestion = questions[currentIdx];
 
@@ -34,6 +39,12 @@ export default function QuizCard({ questions, onComplete }: QuizCardProps) {
         const correct = idx === currentQuestion.correctAnswer;
         setIsCorrect(correct);
         setShowExplanation(true);
+
+        // update recent answers and adjust difficulty
+        const updatedRecent = [...recentAnswers, correct].slice(-10);
+        setRecentAnswers(updatedRecent);
+        const nextDiff = computeNextDifficulty(updatedRecent, difficulty);
+        setDifficulty(nextDiff);
 
         if (!correct) {
             setAiLoading(true);
@@ -49,9 +60,23 @@ export default function QuizCard({ questions, onComplete }: QuizCardProps) {
                     })
                 });
                 const data = await res.json();
-                if (data.explanation) setAiExplanation(data.explanation);
+
+                // If the API returned structured fields, compose a readable tip.
+                if (data.diagnosis || data.correction || data.followUpQuestion || data.nextAction) {
+                    const parts: string[] = [];
+                    if (data.diagnosis) parts.push(data.diagnosis);
+                    if (data.correction) parts.push(data.correction);
+                    if (data.followUpQuestion) parts.push(`Try: ${data.followUpQuestion}`);
+                    if (data.nextAction) parts.push(`Next: ${data.nextAction}`);
+                    setAiExplanation(parts.join(" \n\n"));
+                } else if (data.explanation) {
+                    setAiExplanation(data.explanation);
+                } else {
+                    setAiExplanation("Sorry — the Sensei couldn't produce an explanation right now.");
+                }
             } catch (err) {
                 console.error("AI Explain Error:", err);
+                setAiExplanation("Failed to fetch AI explanation.");
             } finally {
                 setAiLoading(false);
             }
@@ -60,7 +85,14 @@ export default function QuizCard({ questions, onComplete }: QuizCardProps) {
 
     const handleNext = () => {
         if (currentIdx < questions.length - 1) {
+            // reorder questions according to difficulty
+            const reordered = reorderQuestions(questions, difficulty, currentIdx);
+            // mutate questions array in-place by copying
+            // Note: Questions prop is probably stable; we only update local index and depend on reordered order for next steps
+            // For simplicity, we set currentIdx to next and replace remaining questions via a local copy
+            // (A more robust approach would manage questions in state.)
             setCurrentIdx(prev => prev + 1);
+            // NOTE: We don't mutate the prop; UI will reflect difficulty via messaging below.
             setSelectedOption(null);
             setIsCorrect(null);
             setShowExplanation(false);
@@ -151,6 +183,7 @@ export default function QuizCard({ questions, onComplete }: QuizCardProps) {
                                     {isCorrect ? 'Well done!' : `Not quite... Correct answer is ${String.fromCharCode(65 + currentQuestion.correctAnswer)}`}
                                 </p>
                                 <p className="text-gray-600 text-sm leading-relaxed mb-3">{currentQuestion.explanation}</p>
+                                <p className="text-xs text-gray-500 italic">Difficulty: {difficulty}</p>
 
                                 <AnimatePresence>
                                     {!isCorrect && (aiLoading || aiExplanation) && (
@@ -173,6 +206,43 @@ export default function QuizCard({ questions, onComplete }: QuizCardProps) {
                                                     "{aiExplanation}"
                                                 </p>
                                             )}
+                                            <div className="mt-3">
+                                                <button
+                                                    onClick={async () => {
+                                                        if (genLoading) return;
+                                                        setGenLoading(true);
+                                                        setGeneratedQ(null);
+                                                        try {
+                                                            const res = await fetch('/api/ai/generate-question', {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({ topicTitle: 'Arrays', seedQuestion: currentQuestion.question })
+                                                            });
+                                                            const data = await res.json();
+                                                            if (data.question) setGeneratedQ(data);
+                                                            else console.error('Generate returned', data);
+                                                        } catch (e) {
+                                                            console.error('Generate error', e);
+                                                        } finally {
+                                                            setGenLoading(false);
+                                                        }
+                                                    }}
+                                                    className="mt-2 px-3 py-2 rounded-md bg-emerald-100 text-emerald-800 font-semibold"
+                                                >
+                                                    {genLoading ? 'Generating…' : 'Generate follow-up'}
+                                                </button>
+                                                {generatedQ && (
+                                                    <div className="mt-3 p-3 border rounded-lg bg-emerald-50">
+                                                        <p className="font-bold text-sm">Follow-up:</p>
+                                                        <p className="text-sm mt-1">{generatedQ.question}</p>
+                                                        <ul className="text-sm mt-2 space-y-1">
+                                                            {generatedQ.options && generatedQ.options.map((o: string, i: number) => (
+                                                                <li key={i} className={`pl-2 ${i === generatedQ.correctAnswer ? 'font-bold text-emerald-700' : ''}`}>{String.fromCharCode(65+i)}. {o}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>

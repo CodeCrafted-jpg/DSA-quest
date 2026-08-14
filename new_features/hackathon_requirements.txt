@@ -1,0 +1,9 @@
+TRACK 04 Education AI-Powered Personalized Learning Ecosystem Can you identify a 
+patient's potential deterioration before it becomes an emergency—without overwhelming healthcare 
+professionals with false alarms? PROBLEM STATEMENT Build an intelligent learning platform that can determine what
+ a student knows, what they misunderstand, why they are struggling, and what they should learn next. The system should 
+ construct a continuously adapting learning pathway based on performance, learning speed, mistakes, engagement, and knowledge gaps. 
+ The system should analyze answers—not merely whether they are correct, but how the student arrived at them. MINIMUM REQUIREMENTS Student 
+ knowledge modelling Adaptive difficulty Personalized learning paths Automatic question generation Weak-topic detection Learning-progress prediction Teacher analytics dashboard
+  HARD MODE Two students answering the same question incorrectly should potentially receive different explanations and learning paths depending on their underlying misconceptions. 
+  CORE CHALLENGE Can you create an AI tutor that understands a student's misunderstanding rather than simply telling them the correct answer?

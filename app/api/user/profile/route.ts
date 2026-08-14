@@ -15,7 +15,7 @@ export async function GET() {
 
         await connectDB();
 
-        const user = await UserProgress.findOne({ userId }).lean();
+        const user = (await UserProgress.findOne({ userId }).lean()) as any;
 
         if (!user) {
             return NextResponse.json({
@@ -57,7 +57,7 @@ export async function GET() {
             : [];
 
         // Recommended Modules Logic
-        const allTopics = await Topic.find().lean();
+        const allTopics = (await Topic.find().lean()) as any[];
         const recommendations: any[] = [];
 
         for (const t of allTopics) {
@@ -84,7 +84,7 @@ export async function GET() {
 
         // Daily Challenge Logic: Pick a random module they haven't finished
         let dailyChallenge = null;
-        const allModules = allTopics.flatMap(t => t.modules.map(m => ({ ...m, topicId: t._id.toString() })));
+        const allModules = allTopics.flatMap((t: any) => t.modules.map((m: any) => ({ ...m, topicId: t._id.toString() })));
         const uncompletedModules = allModules.filter(m => {
             const topicProg = user.topicProgress?.find((p: any) => p.topicId.toString() === m.topicId);
             const compIds = topicProg?.completedModules?.map((id: any) => id.toString()) || [];
@@ -109,6 +109,12 @@ export async function GET() {
             recentActivities,
             badges: user.badges || [],
             recommendations,
+            misconceptions: user.misconceptions || [],
+            cognitiveProfile: user.cognitiveProfile || {
+                learningSpeed: "Steady",
+                retentionRate: "Good",
+                predictedMasteryDays: 12
+            },
             dailyChallenge: dailyChallenge ? {
                 id: (dailyChallenge as any)._id.toString(),
                 topicId: (dailyChallenge as any).topicId,
